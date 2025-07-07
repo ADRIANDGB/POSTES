@@ -13,36 +13,42 @@ altura_poste = st.number_input("📐 Altura de los postes (m)", min_value=1.0, v
 flecha = st.number_input("⬇️ Flecha máxima del cable (m)", min_value=0.1, value=2.5, step=0.1)
 
 if st.button("🎯 Generar gráfica 3D"):
-    # Datos para curva
+    # Curva de cable
     x = np.linspace(0, distancia, 100)
     z_flecha = -4 * flecha / (distancia ** 2) * (x - distancia / 2) ** 2 + flecha
     z_cable = altura_poste - z_flecha
     y = np.zeros_like(x)
 
-    # Flecha visual
+    # Coordenadas para flecha roja
     x_flecha = [distancia / 2, distancia / 2]
     y_flecha = [0, 0]
     z_flecha_line = [altura_poste, altura_poste - flecha]
-    texto_z = altura_poste + 0.8  # Más arriba del poste
+    texto_z = altura_poste + 1.5
 
     fig = go.Figure()
 
-    # Postes más gruesos
+    # Postes (gruesos)
     fig.add_trace(go.Scatter3d(x=[0, 0], y=[0, 0], z=[0, altura_poste],
-                               mode='lines', line=dict(color='saddlebrown', width=16)))
+                               mode='lines', line=dict(color='saddlebrown', width=16), name='Poste A'))
     fig.add_trace(go.Scatter3d(x=[distancia, distancia], y=[0, 0], z=[0, altura_poste],
-                               mode='lines', line=dict(color='saddlebrown', width=16)))
+                               mode='lines', line=dict(color='saddlebrown', width=16), name='Poste B'))
+
+    # Etiquetas "Poste A" y "Poste B"
+    fig.add_trace(go.Scatter3d(x=[0], y=[0], z=[altura_poste + 0.5],
+                               mode='text', text=["Poste A"], textfont=dict(size=14), showlegend=False))
+    fig.add_trace(go.Scatter3d(x=[distancia], y=[0], z=[altura_poste + 0.5],
+                               mode='text', text=["Poste B"], textfont=dict(size=14), showlegend=False))
 
     # Cable
     fig.add_trace(go.Scatter3d(x=x, y=y, z=z_cable,
-                               mode='lines', line=dict(color='gray', width=6)))
+                               mode='lines', line=dict(color='gray', width=6), name='Cable'))
 
-    # Flecha roja vertical
+    # Flecha vertical roja
     fig.add_trace(go.Scatter3d(x=x_flecha, y=y_flecha, z=z_flecha_line,
                                mode='lines+markers', line=dict(color='red', width=5, dash="dot"),
-                               marker=dict(size=4, color='red')))
+                               marker=dict(size=4, color='red'), name='Flecha'))
 
-    # Texto de flecha más arriba
+    # Texto de flecha arriba
     fig.add_trace(go.Scatter3d(
         x=[distancia / 2], y=[0], z=[texto_z],
         mode='text',
@@ -51,7 +57,23 @@ if st.button("🎯 Generar gráfica 3D"):
         showlegend=False
     ))
 
-    # Limpieza de visual
+    # Leyenda lateral informativa (como anotación)
+    fig.add_annotation(
+        dict(
+            showarrow=False,
+            text=f"<b>📏 Distancia: {distancia:.1f} m<br>⬇️ Flecha: {flecha:.2f} m<br>📐 Altura poste: {altura_poste:.1f} m</b>",
+            xref="paper", yref="paper",
+            x=1.02, y=1.0,
+            align="left",
+            font=dict(size=13),
+            bordercolor="black",
+            borderwidth=1,
+            bgcolor="white",
+            opacity=0.9
+        )
+    )
+
+    # Configuración visual limpia
     fig.update_layout(
         title="Cable suspendido entre postes con flecha",
         showlegend=False,
