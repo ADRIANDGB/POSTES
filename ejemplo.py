@@ -13,36 +13,45 @@ altura_poste = st.number_input("📐 Altura de los postes (m)", min_value=1.0, v
 flecha = st.number_input("⬇️ Flecha máxima del cable (m)", min_value=0.1, value=2.5, step=0.1)
 
 if st.button("🎯 Generar gráfica 3D"):
-    # Coordenadas de la parábola invertida (curva de flecha)
+    # Curva de cable
     x = np.linspace(0, distancia, 100)
     z_flecha = -4 * flecha / (distancia ** 2) * (x - distancia / 2) ** 2 + flecha
     z_cable = altura_poste - z_flecha
     y = np.zeros_like(x)
 
-    # Figura
+    # Coordenadas para flecha vertical
+    x_flecha = [distancia / 2, distancia / 2]
+    y_flecha = [0, 0]
+    z_flecha_line = [altura_poste, altura_poste - flecha]
+    texto_z = altura_poste - flecha - 0.3
+
     fig = go.Figure()
 
-    # Poste izquierdo
+    # Postes
     fig.add_trace(go.Scatter3d(x=[0, 0], y=[0, 0], z=[0, altura_poste],
-                               mode='lines', line=dict(color='saddlebrown', width=10), name='Poste A'))
-    # Poste derecho
+                               mode='lines', line=dict(color='saddlebrown', width=10)))
     fig.add_trace(go.Scatter3d(x=[distancia, distancia], y=[0, 0], z=[0, altura_poste],
-                               mode='lines', line=dict(color='saddlebrown', width=10), name='Poste B'))
+                               mode='lines', line=dict(color='saddlebrown', width=10)))
+
     # Cable
     fig.add_trace(go.Scatter3d(x=x, y=y, z=z_cable,
-                               mode='lines', line=dict(color='gray', width=6), name='Cable'))
+                               mode='lines', line=dict(color='gray', width=6)))
 
-    # Etiqueta de la flecha
+    # Flecha roja (visual)
+    fig.add_trace(go.Scatter3d(x=x_flecha, y=y_flecha, z=z_flecha_line,
+                               mode='lines+markers', line=dict(color='red', width=4, dash="dot"),
+                               marker=dict(size=3, color='red')))
+
+    # Texto de flecha
     fig.add_trace(go.Scatter3d(
-        x=[distancia / 2], y=[0], z=[altura_poste - flecha],
+        x=[distancia / 2], y=[0], z=[texto_z],
         mode='text',
-        text=[f"Flecha: {flecha:.2f} m"],
-        textposition="middle center",
+        text=[f"<b>Flecha = {flecha:.2f} m</b>"],
         textfont=dict(size=14, color='red'),
         showlegend=False
     ))
 
-    # Ajustes visuales para ocultar cuadrantes y ejes
+    # Ajustes visuales
     fig.update_layout(
         title="Cable suspendido entre postes con flecha",
         showlegend=False,
@@ -50,8 +59,7 @@ if st.button("🎯 Generar gráfica 3D"):
             xaxis=dict(visible=False),
             yaxis=dict(visible=False),
             zaxis=dict(visible=False),
-            annotations=[],
-            bgcolor='white',
+            bgcolor='white'
         ),
         margin=dict(l=0, r=0, b=0, t=40),
         paper_bgcolor='white',
