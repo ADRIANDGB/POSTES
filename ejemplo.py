@@ -1,47 +1,47 @@
 import streamlit as st
-import pandas as pd
+import numpy as np
 import plotly.graph_objs as go
 
-st.set_page_config(page_title="Gráfica 3D - Tiempo vs Cantidad", layout="centered")
+st.set_page_config(page_title="Gráfica 3D - Cable con Flecha", layout="centered")
+st.title("🌉 Visualización 3D de Cable entre Postes")
 
-st.title("📊 Gráfica 3D de Datos Ingresados")
+st.markdown("Ingresa los parámetros para generar una visualización 3D de un cable con flecha suspendido entre dos postes.")
 
-st.markdown("Ingrese manualmente los 5 registros con **Tiempo**, **Cantidad**, y **Valor adicional** (para eje Z).")
+# Entradas del usuario
+distancia = st.number_input("📏 Distancia entre postes (m)", min_value=1.0, value=50.0, step=1.0)
+altura_poste = st.number_input("📐 Altura de los postes (m)", min_value=1.0, value=10.0, step=0.5)
+flecha = st.number_input("⬇️ Flecha máxima del cable (m)", min_value=0.1, value=2.5, step=0.1)
 
-# Tabla editable para ingresar los datos
-df_input = pd.DataFrame({
-    'Tiempo': [0, 0, 0, 0, 0],
-    'Cantidad': [0, 0, 0, 0, 0],
-    'Valor Adicional (Z)': [0, 0, 0, 0, 0]
-})
+if st.button("🎯 Generar gráfica 3D"):
+    # Generar coordenadas de la curva (parábola descendente)
+    x = np.linspace(0, distancia, 100)
+    z_flecha = -4 * flecha / (distancia ** 2) * (x - distancia / 2) ** 2 + flecha  # parábola invertida
+    z_cable = altura_poste - z_flecha  # restamos la flecha desde la altura del poste
+    y = np.zeros_like(x)
 
-df = st.data_editor(df_input, num_rows="dynamic", use_container_width=True)
+    # Crear figura 3D
+    fig = go.Figure()
 
-if st.button("📈 Generar Gráfica 3D"):
-    if df.shape[0] < 1:
-        st.warning("⚠️ Ingresa al menos un registro.")
-    else:
-        fig = go.Figure(data=[go.Scatter3d(
-            x=df['Tiempo'],
-            y=df['Cantidad'],
-            z=df['Valor Adicional (Z)'],
-            mode='markers+lines',
-            marker=dict(
-                size=6,
-                color=df['Valor Adicional (Z)'],
-                colorscale='Viridis',
-                opacity=0.8
-            )
-        )])
+    # Postes
+    fig.add_trace(go.Scatter3d(x=[0, 0], y=[0, 0], z=[0, altura_poste],
+                               mode='lines', line=dict(color='saddlebrown', width=10), name='Poste A'))
+    fig.add_trace(go.Scatter3d(x=[distancia, distancia], y=[0, 0], z=[0, altura_poste],
+                               mode='lines', line=dict(color='saddlebrown', width=10), name='Poste B'))
 
-        fig.update_layout(
-            title='Gráfica 3D: Tiempo vs Cantidad vs Valor Adicional',
-            scene=dict(
-                xaxis_title='Tiempo',
-                yaxis_title='Cantidad',
-                zaxis_title='Valor Adicional'
-            ),
-            margin=dict(l=0, r=0, b=0, t=40)
-        )
+    # Cable
+    fig.add_trace(go.Scatter3d(x=x, y=y, z=z_cable,
+                               mode='lines', line=dict(color='gray', width=6), name='Cable'))
 
-        st.plotly_chart(fig, use_container_width=True)
+    # Configuración
+    fig.update_layout(
+        title="Cable suspendido entre postes con flecha",
+        scene=dict(
+            xaxis_title='Distancia (m)',
+            yaxis_title='Y (vista lateral)',
+            zaxis_title='Altura (m)',
+            zaxis=dict(range=[0, altura_poste + 2])
+        ),
+        margin=dict(l=0, r=0, b=0, t=40)
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
